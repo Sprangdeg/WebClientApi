@@ -5,6 +5,7 @@ using System.Web.Http;
 using stryktipsetLibrary;
 using stryktipsetLibrary.EngineNameSpace;
 using stryktipsetLibrary.Models;
+using System.Runtime.Serialization;
 
 namespace Stryktipset.Areas.Stryktipset.Controllers
 {
@@ -23,28 +24,34 @@ namespace Stryktipset.Areas.Stryktipset.Controllers
 
 		[EnableCors(origins: "*", headers: "*", methods: "*")]
 		[HttpGet]
-		public List<CouponRow> EvaluateCoupong()
+		public List<Row> EvaluateCoupong()
 		{
 			ResourceAccess RA = new ResourceAccess();
 			Engine engine = new Engine();
 			var coupong = RA.GetStryktipsCoupon();
 			var goldenTicket = engine.EvaluateStryktipset(coupong);
 
-			List<rows> rows;
+			List<Row> rows = goldenTicket.Matches.Select(x => new Row(x)).ToList();
 
-			return goldenTicket.Matches.ToList();
+			return rows;
 		}
 
-	    public class rows
+        [DataContract]
+	    public class Row
 	    {
+            [DataMember]
 		    public bool HomeMark { get; set; }
-			public bool DrawMark { get; set; }
-			public bool AwayMark { get; set; }
+            [DataMember]
+            public bool DrawMark { get; set; }
+            [DataMember]
+            public bool AwayMark { get; set; }
 
-		    public rows(CouponRow cr)
+		    public Row(CouponRow cr)
 		    {
 			    HomeMark = cr.One;
-		    }
+                DrawMark = cr.Cross;
+                AwayMark = cr.Two;
+            }
 		}
 	}
 }
